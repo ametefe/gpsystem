@@ -1,0 +1,9 @@
+GUI Size is 600x600
+MYSQL Details:
+Username: sa2090
+Password: ttrec#k
+
+
+GP Application Details:
+Username: sa2090
+Password: Password1
