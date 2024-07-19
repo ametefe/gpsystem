@@ -8,18 +8,20 @@ import java.sql.SQLException;
 import gpDB.ConnectionDB;
 
 public class UserManagement {
-    public static UserType userType(int userID) throws UnknownUserException, UnsupportedUserTypeException, SQLException {
-        // determines the user type from the database and displays the buttons accordingly
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
 
-        try {
-            connection = ConnectionDB.getConnection();
-            String query = "SELECT UserType FROM users WHERE UserID = ?"; // prepared statements to prevent SQL injection
-            statement = connection.prepareStatement(query);
-            statement.setInt(1, userID);
-            resultSet = statement.executeQuery();
+    private static PreparedStatement prepareStatement(Connection connection, int userID) throws SQLException {
+        String query = "SELECT UserType FROM users WHERE UserID = ?";
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setInt(1, userID);
+        return statement;
+    }
+
+    public static UserType userType(int userID) throws UnknownUserException, UnsupportedUserTypeException, SQLException {    
+        try (
+            Connection connection = ConnectionDB.getConnection();
+            PreparedStatement preparedStatement = prepareStatement(connection, userID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+        ) {
             if (!resultSet.next()) {
                 throw new UnknownUserException(userID);
             }
@@ -42,18 +44,6 @@ public class UserManagement {
             throwables.printStackTrace();
             throw throwables;
         }
-        finally {
-            try {
-                if (resultSet != null)
-                    resultSet.close();
-                if (statement != null)
-                    statement.close();
-                ConnectionDB.closeConnection(connection);
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-                throw throwables;
-            }
-        } 
     }
 }
 
