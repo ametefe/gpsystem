@@ -1,31 +1,26 @@
 package gpSystem;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.function.Function;
 
-import gpDB.ConnectionDB;
+import gpDB.DatabaseQuery;
 
 public class UserManagement {
     
     public static UserType userType(int userID) throws UnknownUserException, UnsupportedUserTypeException, SQLException {    
-        Function<Connection, ResultSet> queryBuilder = (Connection connection) -> {
-            String query = "SELECT UserType FROM users WHERE UserID = ?";
-
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setInt(1, userID);
-                return statement.executeQuery();
-            }
-            catch (SQLException e) {
-                return null;
-            }
-        };
-
         try (
-            Connection connection = ConnectionDB.getConnection();
-            ResultSet resultSet = queryBuilder.apply(connection);
+            ResultSet resultSet = DatabaseQuery.execute((connection) -> {
+                String query = "SELECT UserType FROM users WHERE UserID = ?";
+        
+                try (PreparedStatement statement = connection.prepareStatement(query)) {
+                    statement.setInt(1, userID);
+                    return statement;
+                }
+                catch (SQLException e) {
+                    return null;
+                }
+            });
         ) {
             if (!resultSet.next()) {
                 throw new UnknownUserException(userID);
