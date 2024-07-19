@@ -2,6 +2,8 @@ package gpGUI;
 
 import javax.swing.*;
 
+import gpDB.ConnectionDB;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

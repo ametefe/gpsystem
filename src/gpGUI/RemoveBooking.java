@@ -12,6 +12,8 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import gpDB.ConnectionDB;
+
 
 public class RemoveBooking implements ActionListener {
     private JFrame frame = new JFrame();

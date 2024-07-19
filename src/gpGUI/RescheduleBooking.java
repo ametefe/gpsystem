@@ -22,6 +22,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import com.github.lgooddatepicker.components.DatePicker;
 
+import gpDB.ConnectionDB;
+
 
 public class RescheduleBooking implements ActionListener {
     private JFrame frame = new JFrame();

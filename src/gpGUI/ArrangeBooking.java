@@ -14,6 +14,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JComboBox;
 import com.github.lgooddatepicker.components.DatePicker;
+
+import gpDB.ConnectionDB;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;

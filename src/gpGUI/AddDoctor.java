@@ -25,6 +25,8 @@ import javax.swing.JTextField;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 
+import gpDB.ConnectionDB;
+
 public class AddDoctor implements ActionListener {
     private JFrame frame = new JFrame();
     private JLabel heading = new JLabel("Add a New Doctor");

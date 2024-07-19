@@ -3,14 +3,14 @@ package gpGUI;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
+import gpExceptions.UnknownUserException;
+import gpSystem.UserManagement;
+import gpSystem.UserType;
 
 public class LandingPage implements ActionListener {
     public JFrame frame = new JFrame();
@@ -89,106 +89,68 @@ public class LandingPage implements ActionListener {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 600);
 
-        // shows the buttons based on the user type
-        determineUserType();
-        welcomeMessage();
-    }
-    
-    private void welcomeMessage()
-    {
-        // uses sql to get the full name of the user
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
+        UserType userType;
+        String fullName;
         try {
-            connection = ConnectionDB.getConnection();
-            String sql = "SELECT "
-                    + "Users.UserID, "
-                    + "Users.Username, "
-                    + "Users.UserType, "
-                    + "CASE "
-                    + "WHEN Users.UserType = 'Doctor' THEN CONCAT(Doctors.FirstName, ' ', Doctors.LastName) "
-                    + "WHEN Users.UserType = 'Patient' THEN CONCAT(Patients.FirstName, ' ', Patients.LastName) "
-                    + "WHEN Users.UserType = 'Admin' THEN CONCAT(Admins.FirstName, ' ', Admins.LastName) "
-                    + "END AS FullName "
-                    + "FROM Users "
-                    + "LEFT JOIN Doctors ON Users.UserID = Doctors.DoctorID AND Users.UserType = 'Doctor' "
-                    + "LEFT JOIN Patients ON Users.UserID = Patients.PatientID AND Users.UserType = 'Patient' "
-                    + "LEFT JOIN Admins ON Users.UserID = Admins.AdminID AND Users.UserType = 'Admin' "
-                    + "WHERE Users.UserID = ?;";
-
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, userID);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                String fullName = resultSet.getString("FullName");
-                System.out.println(fullName);
-                messageLabel.setText("Welcome " + fullName + " to the GP System");
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+            userType = UserManagement.userType(userID);
+            fullName = UserManagement.fullName(userID);
+        }
+        catch (UnknownUserException e) {
+            // print some error message?
+            return;
+        }
+        catch (Exception err) {
+            // don't do this! just to save time for now
+            return;
         }
 
+        // shows the buttons based on the user type
+        populateFrameForUser(userType);
+        welcomeMessage(fullName);
+    }
+    
+    private void welcomeMessage(String fullName)
+    {
+        messageLabel.setText("Welcome " + fullName + " to the GP System");
         messageLabel.setBounds(109, 10, 400, 50);
+     
         // Color of the message
         messageLabel.setForeground(java.awt.Color.BLUE);
         messageLabel.setFont(new Font("Courier", Font.BOLD, 16));
+     
         frame.add(messageLabel);
     }
-    
 
+    private void populateFrameForUser(UserType userType) {
+        switch (userType) {
+            case e_DOCTOR:
+            case e_PATIENT: {
+                // adds all the features the Doctor and Patients can access
+                frame.add(messageBoard);
+                frame.add(logoutButton);
 
-    private void determineUserType() {
-        // determines the user type from the database and displays the buttons accordingly
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
-
-        try {
-            connection = ConnectionDB.getConnection();
-            String query = "SELECT UserType FROM users WHERE UserID = ?"; // prepared statements to prevent SQL injection
-            statement = connection.prepareStatement(query);
-            statement.setInt(1, userID);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                String userType = resultSet.getString("UserType");
-                if (userType.equals("Doctor") || userType.equals("Patient")) {
-                    // adds all the features the Doctor and Patients can access
-                    frame.add(messageBoard);
-                    frame.add(logoutButton);
-                } else {
-                    // adds all the features the admins can access
-                    frame.add(logoutButton);
-                    frame.add(addPatient);
-                    frame.add(addDoctor);
-                    frame.add(changePatientDoctor);
-                    frame.add(viewDoctor);
-                    frame.add(viewPatient);
-                    frame.add(viewBooking);
-                    frame.add(activityLogger);
-                    frame.add(messageBoard);
-                    frame.add(arrangeBooking);
-                    frame.add(rescheduleBooking);
-                    frame.add(removeBooking);
-                }
+                break;
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            // handle database error
-        } finally {
-            // displays the buttons
-            frame.setLayout(null);
-            frame.setVisible(true);
-            try {
-                if (resultSet != null)
-                    resultSet.close();
-                if (statement != null)
-                    statement.close();
-                ConnectionDB.closeConnection(connection);
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+            case e_ADMIN: {
+                frame.add(logoutButton);
+                frame.add(addPatient);
+                frame.add(addDoctor);
+                frame.add(changePatientDoctor);
+                frame.add(viewDoctor);
+                frame.add(viewPatient);
+                frame.add(viewBooking);
+                frame.add(activityLogger);
+                frame.add(messageBoard);
+                frame.add(arrangeBooking);
+                frame.add(rescheduleBooking);
+                frame.add(removeBooking);
+                break;
             }
         }
+
+        // displays the buttons
+        frame.setLayout(null);
+        frame.setVisible(true);
     }
     
     @Override
