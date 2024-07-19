@@ -12,6 +12,8 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import gpDB.ConnectionDB;
+
 public class LandingPage implements ActionListener {
     public JFrame frame = new JFrame();
     public JButton logoutButton = new JButton("Logout");
