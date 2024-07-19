@@ -4,23 +4,28 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.function.Function;
 
 import gpDB.ConnectionDB;
 
 public class UserManagement {
-
-    private static PreparedStatement prepareStatement(Connection connection, int userID) throws SQLException {
-        String query = "SELECT UserType FROM users WHERE UserID = ?";
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setInt(1, userID);
-        return statement;
-    }
-
+    
     public static UserType userType(int userID) throws UnknownUserException, UnsupportedUserTypeException, SQLException {    
+        Function<Connection, ResultSet> queryBuilder = (Connection connection) -> {
+            String query = "SELECT UserType FROM users WHERE UserID = ?";
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, userID);
+                return statement.executeQuery();
+            }
+            catch (SQLException e) {
+                return null;
+            }
+        };
+
         try (
             Connection connection = ConnectionDB.getConnection();
-            PreparedStatement preparedStatement = prepareStatement(connection, userID);
-            ResultSet resultSet = preparedStatement.executeQuery();
+            ResultSet resultSet = queryBuilder.apply(connection);
         ) {
             if (!resultSet.next()) {
                 throw new UnknownUserException(userID);
