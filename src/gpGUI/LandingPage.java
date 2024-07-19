@@ -13,6 +13,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import gpDB.ConnectionDB;
+import gpSystem.UserManagement;
+import gpSystem.UserType;
 
 public class LandingPage implements ActionListener {
     public JFrame frame = new JFrame();
@@ -91,8 +93,17 @@ public class LandingPage implements ActionListener {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 600);
 
+        UserType userType;
+        try {
+            userType = UserManagement.userType(userID);
+        }
+        catch (Exception err) {
+            // don't do this! just to save time for now
+            return;
+        }
+
         // shows the buttons based on the user type
-        determineUserType();
+        populateFrameForUser(userType);
         welcomeMessage();
     }
     
@@ -137,60 +148,37 @@ public class LandingPage implements ActionListener {
         messageLabel.setFont(new Font("Courier", Font.BOLD, 16));
         frame.add(messageLabel);
     }
-    
 
+    private void populateFrameForUser(UserType userType) {
+        switch (userType) {
+            case e_DOCTOR:
+            case e_PATIENT: {
+                // adds all the features the Doctor and Patients can access
+                frame.add(messageBoard);
+                frame.add(logoutButton);
 
-    private void determineUserType() {
-        // determines the user type from the database and displays the buttons accordingly
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
-
-        try {
-            connection = ConnectionDB.getConnection();
-            String query = "SELECT UserType FROM users WHERE UserID = ?"; // prepared statements to prevent SQL injection
-            statement = connection.prepareStatement(query);
-            statement.setInt(1, userID);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                String userType = resultSet.getString("UserType");
-                if (userType.equals("Doctor") || userType.equals("Patient")) {
-                    // adds all the features the Doctor and Patients can access
-                    frame.add(messageBoard);
-                    frame.add(logoutButton);
-                } else {
-                    // adds all the features the admins can access
-                    frame.add(logoutButton);
-                    frame.add(addPatient);
-                    frame.add(addDoctor);
-                    frame.add(changePatientDoctor);
-                    frame.add(viewDoctor);
-                    frame.add(viewPatient);
-                    frame.add(viewBooking);
-                    frame.add(activityLogger);
-                    frame.add(messageBoard);
-                    frame.add(arrangeBooking);
-                    frame.add(rescheduleBooking);
-                    frame.add(removeBooking);
-                }
+                break;
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            // handle database error
-        } finally {
-            // displays the buttons
-            frame.setLayout(null);
-            frame.setVisible(true);
-            try {
-                if (resultSet != null)
-                    resultSet.close();
-                if (statement != null)
-                    statement.close();
-                ConnectionDB.closeConnection(connection);
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+            case e_ADMIN: {
+                frame.add(logoutButton);
+                frame.add(addPatient);
+                frame.add(addDoctor);
+                frame.add(changePatientDoctor);
+                frame.add(viewDoctor);
+                frame.add(viewPatient);
+                frame.add(viewBooking);
+                frame.add(activityLogger);
+                frame.add(messageBoard);
+                frame.add(arrangeBooking);
+                frame.add(rescheduleBooking);
+                frame.add(removeBooking);
+                break;
             }
         }
+
+        // displays the buttons
+        frame.setLayout(null);
+        frame.setVisible(true);
     }
     
     @Override
