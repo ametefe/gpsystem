@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import gpExceptions.UnknownUserException;
-import gpExceptions.UserManagement;
+import gpSystem.UserManagement;
 import gpSystem.UserType;
 
 public class LandingPage implements ActionListener {
