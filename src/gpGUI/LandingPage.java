@@ -3,17 +3,13 @@ package gpGUI;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import gpDB.ConnectionDB;
-import gpSystem.UserManagement;
+import gpExceptions.UnknownUserException;
+import gpExceptions.UserManagement;
 import gpSystem.UserType;
 
 public class LandingPage implements ActionListener {
@@ -94,8 +90,14 @@ public class LandingPage implements ActionListener {
         frame.setSize(600, 600);
 
         UserType userType;
+        String fullName;
         try {
             userType = UserManagement.userType(userID);
+            fullName = UserManagement.fullName(userID);
+        }
+        catch (UnknownUserException e) {
+            // print some error message?
+            return;
         }
         catch (Exception err) {
             // don't do this! just to save time for now
@@ -104,48 +106,18 @@ public class LandingPage implements ActionListener {
 
         // shows the buttons based on the user type
         populateFrameForUser(userType);
-        welcomeMessage();
+        welcomeMessage(fullName);
     }
     
-    private void welcomeMessage()
+    private void welcomeMessage(String fullName)
     {
-        // uses sql to get the full name of the user
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
-        try {
-            connection = ConnectionDB.getConnection();
-            String sql = "SELECT "
-                    + "Users.UserID, "
-                    + "Users.Username, "
-                    + "Users.UserType, "
-                    + "CASE "
-                    + "WHEN Users.UserType = 'Doctor' THEN CONCAT(Doctors.FirstName, ' ', Doctors.LastName) "
-                    + "WHEN Users.UserType = 'Patient' THEN CONCAT(Patients.FirstName, ' ', Patients.LastName) "
-                    + "WHEN Users.UserType = 'Admin' THEN CONCAT(Admins.FirstName, ' ', Admins.LastName) "
-                    + "END AS FullName "
-                    + "FROM Users "
-                    + "LEFT JOIN Doctors ON Users.UserID = Doctors.DoctorID AND Users.UserType = 'Doctor' "
-                    + "LEFT JOIN Patients ON Users.UserID = Patients.PatientID AND Users.UserType = 'Patient' "
-                    + "LEFT JOIN Admins ON Users.UserID = Admins.AdminID AND Users.UserType = 'Admin' "
-                    + "WHERE Users.UserID = ?;";
-
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, userID);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                String fullName = resultSet.getString("FullName");
-                System.out.println(fullName);
-                messageLabel.setText("Welcome " + fullName + " to the GP System");
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-
+        messageLabel.setText("Welcome " + fullName + " to the GP System");
         messageLabel.setBounds(109, 10, 400, 50);
+     
         // Color of the message
         messageLabel.setForeground(java.awt.Color.BLUE);
         messageLabel.setFont(new Font("Courier", Font.BOLD, 16));
+     
         frame.add(messageLabel);
     }
 
